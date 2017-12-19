@@ -1,3 +1,11 @@
+
+
+FUNCTION_WORDS = set(["the", ",", ".", "a", "an", "and", "or", "be", "who", "he", "she", "it", "is", "are", "of",
+                      "in", "to", "'s", "with", "''", '``', "have", "has", "that", "for",
+                      "by", "his", "from", "their", "not", "it", "at", "her", "which", "on", "(", ")",
+                      "without", "between", "anybody", "they", "my", "more", "much", "either", "neither",
+                      "when", "while", "although", "am", "got", "do", "as"])
+
 class ContextStrategy(object):
     def __init__(self):
         pass
@@ -24,7 +32,7 @@ class WindowContextWord(object):
         the number of words to the left and right is determined by the window_size variable
         (default is 2).
         """
-        lemma_words = [current_sentence.split('\t')[2] for current_sentence in sentence]
+        lemma_words = filter(lambda word: word not in FUNCTION_WORDS, [current_sentence.split('\t')[2] for current_sentence in sentence])
         num_of_words = len(lemma_words)
         context = list()
         for i in range(0, num_of_words):
@@ -55,6 +63,7 @@ class DependecyContextWord(object):
             context.append(list())
             lemma_words.append(parsed_word[2])
 
+        lemma_words = filter(lambda word: word not in FUNCTION_WORDS, lemma_words)
         for i in range(0, num_of_words):
             dependency_id = int(words[i][6]) - 1
             dependency_label = words[i][7]
@@ -77,6 +86,8 @@ class CoContextWord(object):
         """
 
         lemma_words = [current_sentence.split('\t')[2] for current_sentence in sentence]
+        lemma_words = filter(lambda word: word not in FUNCTION_WORDS, lemma_words)
+
         num_of_words = len(lemma_words)
         context = list()
         for i in range(0, num_of_words):
@@ -91,6 +102,9 @@ def CoContextStrategySimpleTest():
                 "3\tate\teat\tVB\tVB\t_\t2\tpartmod\t_\t_\r\n",
                 "4\tmy\tmy\tIN\tIN\t_\t5\tposs\t_\t_\r\n", "5\thomework\thomework\tNN\tNN\t_\t0\t_\t_\t_\r\n"]
     words, context = ccw.get_context(sentence)
+
+
+
     assert context[0] == ['dog', 'eat', 'my', 'homework'] and words[0] == 'the'
     print "Passed zero index test"
     assert context[1] == ['the', 'eat', 'my', 'homework'] and words[1] == 'dog'
@@ -114,6 +128,7 @@ def WindowContextWordSimpleTest():
                 "3\tate\teat\tVB\tVB\t_\t2\tpartmod\t_\t_\r\n",
                 "4\tmy\tmy\tIN\tIN\t_\t5\tposs\t_\t_\r\n", "5\thomework\thomework\tNN\tNN\t_\t0\t_\t_\t_\r\n"]
     words, context = wcw.get_context(sentence)
+
     assert context[0] == ['dog', 'eat'] and words[0] == 'the'
     print "Passed zero index test"
     assert context[1] == ['the', 'eat', 'my'] and words[1] == 'dog'
@@ -139,6 +154,9 @@ def DependencyContextWordSimpleTest():
                 "3\tate\teat\tVB\tVB\t_\t2\tpartmod\t_\t_\r\n",
                 "4\tmy\tmy\tIN\tIN\t_\t5\tposs\t_\t_\r\n", "5\thomework\thomework\tNN\tNN\t_\t0\t_\t_\t_\r\n"]
     words, context = wcw.get_context(sentence)
+
+
+
     assert context[0] == ['dog -> simpledet'] and words[0] == 'the'
     print "Passed zero index test"
     assert context[1] == ["the <- simpledet", "eat <- partmod"] and words[1] == 'dog'
