@@ -4,7 +4,9 @@ FUNCTION_WORDS = set(["the", ",", ".", "a", "an", "and", "or", "be", "who", "he"
                       "in", "to", "'s", "with", "''", '``', "have", "has", "that", "for",
                       "by", "his", "from", "their", "not", "it", "at", "her", "which", "on", "(", ")",
                       "without", "between", "anybody", "they", "my", "more", "much", "either", "neither",
-                      "when", "while", "although", "am", "got", "do", "as"])
+                      "when", "while", "although", "am", "got", "do", "as",
+                      "but", ";", "-", "this", "one","also", "after", "therefore",
+                      "could", "can", "got"])
 
 class ContextStrategy(object):
     def __init__(self):
