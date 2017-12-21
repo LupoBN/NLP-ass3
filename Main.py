@@ -48,6 +48,9 @@ def create_dictionary(sentences, strategy):
             context_counts_for_word = counts[w]
 
             for context_word in c:
+
+                 if lemma_count[context_word] < 100: continue
+
                  context_counts_for_word[context_word] += 1
 
     print "Voc size: ", len(counts)
@@ -60,25 +63,31 @@ def calculate_PMI(x, y, counts):
     p_y =  sum(counts[y].values())/(1.*total_num_pairs)
     p_x_y = (counts[x][y])/(1.*total_num_pairs)
 
-    return max(np.log(p_x_y/(p_x*p_y)), 0)
+    print (x, y), (p_x, p_y), (x in counts, y in counts)
+    print len (counts[x])
+    print len(counts[y])
+    print "===================================================="
+    return max(np.log(p_x_y/(p_x*p_y)), 0.)
 
-def get_vector(w, counts, lemma_count):
-    v = np.zeros(len(lemma_count))
+def get_vector(w, counts, lemma_count, word2key):
+    #v = np.zeros(len(lemma_count))
+    v = []
 
     for i, w2 in enumerate(sorted(lemma_count)):
 
         PMI = calculate_PMI(w,w2,counts)
-        v[i] = PMI
+        if PMI>1e-7:
+            v.append((word2key[w2], PMI) )
 
     return v
 
-def get_matrix(counts, lemma_count):
+def get_matrix(counts, lemma_count, word2key):
 
     l = len(lemma_count)
-    m = np.zeros(l, l)
+    m = [None]*l
 
     for i, w in enumerate(sorted(lemma_count)):
-        m[i] = get_vector(w, counts, lemma_count)
+        m[i] = get_vector(w, counts, lemma_count, word2key)
 
     return m
 
@@ -86,7 +95,10 @@ if __name__ == "__main__":
 
     sentences = read_file("wikipedia.sample.trees.lemmatized")
     lemma_count = get_word_count(sentences)
+    frequent_lemmas = filter(lambda lemma: lemma_count[lemma]>100, set(lemma_count.keys()) )
 
+    key2word = {i:w for i,w in enumerate(sorted(lemma_count.iterkeys()))   }
+    word2key = {w:i for i,w in enumerate(sorted(lemma_count.iterkeys()))   }
 
     strategy = WindowContextWord()
     dict = create_dictionary(sentences, strategy)
@@ -121,5 +133,9 @@ if __name__ == "__main__":
     print "================="
 
     print calculate_PMI("dog", "cat", dict)
-    m = get_matrix(dict, lemma_count)
-    print m.shape
+    print calculate_PMI("england", "france", dict)
+    print calculate_PMI("wine", "grape", dict)
+    print calculate_PMI("computer", "television", dict)
+    print calculate_PMI("england", "television", dict)
+    print calculate_PMI("dog", "john", dict)
+    m = get_matrix(dict, lemma_count, word2key)
