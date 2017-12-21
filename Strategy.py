@@ -1,12 +1,11 @@
-
-
 FUNCTION_WORDS = set(["the", ",", ".", "a", "an", "and", "or", "be", "who", "he", "she", "it", "is", "are", "of",
-                      "in", "to", "'s", "with", "''", '``', "have", "has","this", "that", "for",
+                      "in", "to", "'s", "with", "''", '``', "have", "has", "this", "that", "for",
                       "by", "his", "from", "their", "not", "it", "at", "her", "which", "on", "(", ")",
                       "without", "between", "anybody", "they", "my", "more", "much", "either", "neither",
                       "when", "while", "although", "am", "got", "do", "as",
-                      "but", ";", "-", "this", "one","also", "after", "therefore",
+                      "but", ";", "-", "this", "one", "also", "after", "therefore",
                       "could", "can"])
+
 
 class ContextStrategy(object):
     def __init__(self):
@@ -34,7 +33,8 @@ class WindowContextWord(object):
         the number of words to the left and right is determined by the window_size variable
         (default is 2).
         """
-        lemma_words = filter(lambda word: word not in FUNCTION_WORDS, [current_sentence.split('\t')[2] for current_sentence in sentence])
+        lemma_words = filter(lambda word: word not in FUNCTION_WORDS,
+                             [current_sentence.split('\t')[2] for current_sentence in sentence])
         num_of_words = len(lemma_words)
         context = list()
         for i in range(0, num_of_words):
@@ -65,14 +65,16 @@ class DependecyContextWord(object):
             context.append(list())
             lemma_words.append(parsed_word[2])
 
-        lemma_words = filter(lambda word: word not in FUNCTION_WORDS, lemma_words)
+        filtered_lemma_words = filter(lambda word: word not in FUNCTION_WORDS, lemma_words)
         for i in range(0, num_of_words):
             dependency_id = int(words[i][6]) - 1
             dependency_label = words[i][7]
             if dependency_id != -1:
-                context[i].append(lemma_words[dependency_id] + " -> " + dependency_label)
-                context[dependency_id].append(lemma_words[i] + " <- " + dependency_label)
-        return lemma_words, context
+                if lemma_words[dependency_id] not in FUNCTION_WORDS and lemma_words[i] not in FUNCTION_WORDS:
+                    context[i].append(lemma_words[dependency_id] + " -> " + dependency_label)
+                    context[dependency_id].append(lemma_words[i] + " <- " + dependency_label)
+        context = [x for x in context if x != []]
+        return filtered_lemma_words, context
 
 
 class CoContextWord(object):
@@ -105,23 +107,14 @@ def CoContextStrategySimpleTest():
                 "4\tmy\tmy\tIN\tIN\t_\t5\tposs\t_\t_\r\n", "5\thomework\thomework\tNN\tNN\t_\t0\t_\t_\t_\r\n"]
     words, context = ccw.get_context(sentence)
 
+    assert len(context) == 3
+    assert len(words) == 3
 
-
-    assert context[0] == ['dog', 'eat', 'my', 'homework'] and words[0] == 'the'
+    assert context[0] == ['eat', 'homework'] and words[0] == 'dog'
     print "Passed zero index test"
-    assert context[1] == ['the', 'eat', 'my', 'homework'] and words[1] == 'dog'
+    assert context[1] == ['dog', 'homework'] and words[1] == 'eat'
     print "Passed first index test"
-
-    assert context[2] == ['the', 'dog', 'my', 'homework'] and words[2] == 'eat'
-    print "Passed second index test"
-
-    assert context[3] == ['the', 'dog', 'eat', 'homework'] and words[3] == 'my'
-    print "Passed third index test"
-
-    assert context[4] == ['the', 'dog', 'eat', 'my'] and words[4] == 'homework'
-    print "Passed last index test"
-
-    print "Passed co occurrence test"
+    assert context[2] == ['dog', 'eat'] and words[2] == 'homework'
 
 
 def WindowContextWordSimpleTest():
@@ -130,48 +123,33 @@ def WindowContextWordSimpleTest():
                 "3\tate\teat\tVB\tVB\t_\t2\tpartmod\t_\t_\r\n",
                 "4\tmy\tmy\tIN\tIN\t_\t5\tposs\t_\t_\r\n", "5\thomework\thomework\tNN\tNN\t_\t0\t_\t_\t_\r\n"]
     words, context = wcw.get_context(sentence)
+    assert len(context) == 3
+    assert len(words) == 3
 
-    assert context[0] == ['dog', 'eat'] and words[0] == 'the'
+    assert context[0] == ['eat', 'homework'] and words[0] == 'dog'
     print "Passed zero index test"
-    assert context[1] == ['the', 'eat', 'my'] and words[1] == 'dog'
+    assert context[1] == ['dog', 'homework'] and words[1] == 'eat'
     print "Passed first index test"
-
-    assert context[2] == ['the', 'dog', 'my', 'homework'] and words[2] == 'eat'
-    print "Passed second index test"
-
-    assert context[3] == ['dog', 'eat', 'homework'] and words[3] == 'my'
-    print "Passed third index test"
-
-    assert context[4] == ['eat', 'my'] and words[4] == 'homework'
-    print "Passed last index test"
+    assert context[2] == ['dog', 'eat'] and words[2] == 'homework'
 
     print "Passed window occurrence test"
 
 
 def DependencyContextWordSimpleTest():
     # Still under construction.
-    raise NotImplementedError
     wcw = DependecyContextWord()
     sentence = ["1\tThe\tthe\tIN\tIN\t_\t2\tsimpledet\t_\t_\r\n", "2\tdog\tdog\tNN\tNN\t_\t0\t_\t_\t_\r\n",
                 "3\tate\teat\tVB\tVB\t_\t2\tpartmod\t_\t_\r\n",
                 "4\tmy\tmy\tIN\tIN\t_\t5\tposs\t_\t_\r\n", "5\thomework\thomework\tNN\tNN\t_\t0\t_\t_\t_\r\n"]
     words, context = wcw.get_context(sentence)
 
-
-
-    assert context[0] == ['dog -> simpledet'] and words[0] == 'the'
+    assert len(context) == 2
+    assert len(words) == 3
+    assert context[0] == ["eat <- partmod"] and words[0] == 'dog'
     print "Passed zero index test"
-    assert context[1] == ["the <- simpledet", "eat <- partmod"] and words[1] == 'dog'
+    assert context[1] == ['dog -> partmod'] and words[1] == 'eat'
     print "Passed first index test"
-
-    assert context[2] == ['dog -> partmod'] and words[2] == 'eat'
-    print "Passed second index test"
-
-    assert context[3] == ['homework -> poss'] and words[3] == 'my'
-    print "Passed third index test"
-
-    assert context[4] == ['my <- poss'] and words[4] == 'homework'
-    print "Passed last index test"
+    assert words[2] == 'homework'
 
     print "Passed dependency occurrence test"
 
