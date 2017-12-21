@@ -3,14 +3,6 @@ import sys
 from collections import defaultdict, Counter
 import numpy as np
 
-FUNCTION_WORDS = set(["the", ",", ".", "a", "an", "and", "or", "be", "who", "he", "she", "it", "is", "are", "of",
-                      "in", "to", "'s", "with", "''", '``', "have", "has", "that", "for",
-                      "by", "his", "from", "their", "not", "it", "at", "her", "which", "on", "(", ")",
-                      "without", "between", "anybody", "they", "my", "more", "much", "either", "neither",
-                      "when", "while", "although", "am", "got", "do", "as",
-                      "but", ";", "-", "this", "one","also", "after", "therefore",
-                      "could", "can", "got"])
-
 
 def read_file(file_name):
 
@@ -65,9 +57,9 @@ def create_dictionary(sentences, strategy, frequent_lemmas):
     return counts
 
 def calculate_PMI(x, y, counts, total_num_of_pairs):
-    p_x = sum(counts[x].itervalues())/(1.*total_num_of_pairs)
-    p_y =  sum(counts[y].itervalues())/(1.*total_num_of_pairs)
-    p_x_y = (counts[x][y])/(1.*total_num_of_pairs)
+    p_x = sum(counts[x].itervalues())/total_num_of_pairs
+    p_y =  sum(counts[y].itervalues())/total_num_of_pairs
+    p_x_y = (counts[x][y])/total_num_of_pairs
 
     # print (x, y), (p_x, p_y), (x in counts, y in counts)
     # print len (counts[x])
@@ -78,7 +70,9 @@ def calculate_PMI(x, y, counts, total_num_of_pairs):
 def get_vector(w, counts, frequent_lemmas, word2key, total_num_pairs):
     #v = np.zeros(len(lemma_count))
     v = []
-    for i, w2 in enumerate(sorted(frequent_lemmas)):
+    for i, w2 in enumerate(counts[w].iterkeys()):
+
+        if w2 not in frequent_lemmas: continue
 
         PMI = calculate_PMI(w,w2,counts, total_num_pairs)
         if PMI>1e-7:
@@ -89,14 +83,13 @@ def get_vector(w, counts, frequent_lemmas, word2key, total_num_pairs):
 def get_matrix(counts, frequent_lemmas, word2key):
 
     l = len(frequent_lemmas)
-    print "l: ", l
     m = [None]*l
-    total_num_pairs = sum( [sum(counts[c].itervalues()) for c in counts]    )
+    total_num_pairs = 1.*sum( [sum(counts[c].itervalues()) for c in counts]    )
 
-    for i, w in enumerate(sorted(frequent_lemmas)):
-        if i%1000 == 0:
-            print i
-        m[i] = get_vector(w, counts, frequent_lemmas, word2key, total_num_pairs)
+    for i, w in enumerate(frequent_lemmas):
+        if i%100 == 0:
+            print "{}/{}".format(i,l)
+        m[word2key[w]] = get_vector(w, counts, frequent_lemmas, word2key, total_num_pairs)
 
     return m
 
