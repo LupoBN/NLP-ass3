@@ -34,7 +34,7 @@ def get_word_count(sentences):
 
     return lemma_count
 
-def create_dictionary(sentences, strategy):
+def create_dictionary(sentences, strategy, frequent_lemmas):
 
     counts = defaultdict(Counter)
 
@@ -43,13 +43,13 @@ def create_dictionary(sentences, strategy):
 
         for (w,c) in zip(words, context):
 
-            if lemma_count[w] < 100: continue #filter rare words.
+            if w not in frequent_lemmas: continue #filter rare words.
 
             context_counts_for_word = counts[w]
 
             for context_word in c:
 
-                 if lemma_count[context_word] < 100: continue
+                 if context_word not in frequent_lemmas: continue
 
                  context_counts_for_word[context_word] += 1
 
@@ -69,11 +69,11 @@ def calculate_PMI(x, y, counts):
     print "===================================================="
     return max(np.log(p_x_y/(p_x*p_y)), 0.)
 
-def get_vector(w, counts, lemma_count, word2key):
+def get_vector(w, counts, frequent_lemmas, word2key):
     #v = np.zeros(len(lemma_count))
     v = []
 
-    for i, w2 in enumerate(sorted(lemma_count)):
+    for i, w2 in enumerate(sorted(frequent_lemmas)):
 
         PMI = calculate_PMI(w,w2,counts)
         if PMI>1e-7:
@@ -81,13 +81,13 @@ def get_vector(w, counts, lemma_count, word2key):
 
     return v
 
-def get_matrix(counts, lemma_count, word2key):
+def get_matrix(counts, frequent_lemmas, word2key):
 
-    l = len(lemma_count)
+    l = len(frequent_lemmas)
     m = [None]*l
 
-    for i, w in enumerate(sorted(lemma_count)):
-        m[i] = get_vector(w, counts, lemma_count, word2key)
+    for i, w in enumerate(sorted(frequent_lemmas)):
+        m[i] = get_vector(w, counts, frequent_lemmas, word2key)
 
     return m
 
@@ -95,13 +95,14 @@ if __name__ == "__main__":
 
     sentences = read_file("wikipedia.sample.trees.lemmatized")
     lemma_count = get_word_count(sentences)
-    frequent_lemmas = filter(lambda lemma: lemma_count[lemma]>100, set(lemma_count.keys()) )
 
-    key2word = {i:w for i,w in enumerate(sorted(lemma_count.iterkeys()))   }
-    word2key = {w:i for i,w in enumerate(sorted(lemma_count.iterkeys()))   }
+    frequent_lemmas = set(filter(lambda lemma: lemma_count[lemma]>100, lemma_count.iterkeys() ))
+
+    key2word = {i:w for i,w in enumerate(sorted(frequent_lemmas))   }
+    word2key = {w:i for i,w in enumerate(sorted(frequent_lemmas))   }
 
     strategy = WindowContextWord()
-    dict = create_dictionary(sentences, strategy)
+    dict = create_dictionary(sentences, strategy, frequent_lemmas)
     k = 5
     print dict['dog'].most_common(k)
     print "================="
@@ -118,7 +119,7 @@ if __name__ == "__main__":
 
     print "==================================================="
     strategy = CoContextWord()
-    dict = create_dictionary(sentences, strategy)
+    dict = create_dictionary(sentences, strategy, frequent_lemmas)
     print dict['dog'].most_common(k)
     print "================="
     print dict['cat'].most_common(k)
@@ -138,4 +139,4 @@ if __name__ == "__main__":
     print calculate_PMI("computer", "television", dict)
     print calculate_PMI("england", "television", dict)
     print calculate_PMI("dog", "john", dict)
-    m = get_matrix(dict, lemma_count, word2key)
+    m = get_matrix(dict, frequent_lemmas, word2key)
