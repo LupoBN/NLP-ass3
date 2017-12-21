@@ -3,6 +3,7 @@ import sys
 from collections import defaultdict, Counter
 import numpy as np
 
+MIN_OCCURRENCES = 100
 
 def read_file(file_name):
 
@@ -98,7 +99,7 @@ if __name__ == "__main__":
     sentences = read_file("wikipedia.sample.trees.lemmatized")
     lemma_count = get_word_count(sentences)
 
-    frequent_lemmas = set(filter(lambda lemma: lemma_count[lemma]>100 and lemma not in FUNCTION_WORDS, lemma_count.iterkeys() ))
+    frequent_lemmas = set(filter(lambda lemma: lemma_count[lemma]>MIN_OCCURRENCES and lemma not in FUNCTION_WORDS, lemma_count.iterkeys() ))
 
     key2word = {i:w for i,w in enumerate(sorted(frequent_lemmas))   }
     word2key = {w:i for i,w in enumerate(sorted(frequent_lemmas))   }
