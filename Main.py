@@ -65,8 +65,8 @@ def create_dictionary(sentences, strategy, frequent_lemmas):
     return counts
 
 def calculate_PMI(x, y, counts, total_num_of_pairs):
-    p_x = sum(counts[x].values())/(1.*total_num_of_pairs)
-    p_y =  sum(counts[y].values())/(1.*total_num_of_pairs)
+    p_x = sum(counts[x].itervalues())/(1.*total_num_of_pairs)
+    p_y =  sum(counts[y].itervalues())/(1.*total_num_of_pairs)
     p_x_y = (counts[x][y])/(1.*total_num_of_pairs)
 
     # print (x, y), (p_x, p_y), (x in counts, y in counts)
@@ -75,10 +75,9 @@ def calculate_PMI(x, y, counts, total_num_of_pairs):
     # print "===================================================="
     return max(np.log(p_x_y/(p_x*p_y)), 0.)
 
-def get_vector(w, counts, frequent_lemmas, word2key):
+def get_vector(w, counts, frequent_lemmas, word2key, total_num_pairs):
     #v = np.zeros(len(lemma_count))
     v = []
-    total_num_pairs = sum( [sum(counts[c].itervalues()) for c in counts]    )
     for i, w2 in enumerate(sorted(frequent_lemmas)):
 
         PMI = calculate_PMI(w,w2,counts, total_num_pairs)
@@ -92,11 +91,12 @@ def get_matrix(counts, frequent_lemmas, word2key):
     l = len(frequent_lemmas)
     print "l: ", l
     m = [None]*l
+    total_num_pairs = sum( [sum(counts[c].itervalues()) for c in counts]    )
 
     for i, w in enumerate(sorted(frequent_lemmas)):
         if i%1000 == 0:
             print i
-        m[i] = get_vector(w, counts, frequent_lemmas, word2key)
+        m[i] = get_vector(w, counts, frequent_lemmas, word2key, total_num_pairs)
 
     return m
 
@@ -142,11 +142,11 @@ if __name__ == "__main__":
     print dict['england'].most_common(k)
     print "================="
 
-    print calculate_PMI("dog", "cat", dict)
-    print calculate_PMI("england", "france", dict)
-    print calculate_PMI("wine", "grape", dict)
-    print calculate_PMI("computer", "television", dict)
-    print calculate_PMI("england", "television", dict)
-    print calculate_PMI("dog", "john", dict)
+    # print calculate_PMI("dog", "cat", dict)
+    # print calculate_PMI("england", "france", dict)
+    # print calculate_PMI("wine", "grape", dict)
+    # print calculate_PMI("computer", "television", dict)
+    # print calculate_PMI("england", "television", dict)
+    # print calculate_PMI("dog", "john", dict)
     print "bulding matrix..."
     m = get_matrix(dict, frequent_lemmas, word2key)
