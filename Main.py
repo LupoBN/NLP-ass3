@@ -144,3 +144,7 @@ if __name__ == "__main__":
     # print calculate_PMI("dog", "john", dict)
     print "bulding matrix..."
     m = get_matrix(dict, frequent_lemmas, word2key)
+    # v  = m[0]
+    # for (key, count) in v.iteritems():
+    #     print (key2word[key], count)
+    # print key2word[0]
