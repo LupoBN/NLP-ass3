@@ -71,16 +71,16 @@ class DependecyContextWord(object):
             dependency_label = words[i][7]
             if dependency_id != -1:
                 if lemma_words[dependency_id] not in FUNCTION_WORDS and lemma_words[i] not in FUNCTION_WORDS:
-                    context[i].append(lemma_words[dependency_id] + " U " + dependency_label)
-                    context[dependency_id].append(lemma_words[i] + " D " + dependency_label)
+                    context[i].append(lemma_words[dependency_id] + " *-U-* " + dependency_label)
+                    context[dependency_id].append(lemma_words[i] + " *-D-* " + dependency_label)
 
-                elif lemma_words[dependency_id] in FUNCTION_WORDS:
-                    det_dependency_id = int(words[dependency_id][6]) - 1
-                    det_depndency_label = words[det_dependency_id][7]
-                    if det_dependency_id != -1:
-                        det_dependency_conencted_word = words[det_dependency_id][2]
-                        context[i].append(det_dependency_conencted_word + " U " + lemma_words[dependency_id])
-                        context[det_dependency_id].append(det_dependency_conencted_word + " D " + lemma_words[i])
+                # elif lemma_words[dependency_id] in FUNCTION_WORDS:
+                #     det_dependency_id = int(words[dependency_id][6]) - 1
+                #     det_depndency_label = words[det_dependency_id][7]
+                #     if det_dependency_id != -1:
+                #         det_dependency_conencted_word = words[det_dependency_id][2]
+                #         context[i].append(det_dependency_conencted_word + " U " + lemma_words[dependency_id])
+                #         context[det_dependency_id].append(det_dependency_conencted_word + " D " + lemma_words[i])
 
 
         context = [x for x in context if x != []]
