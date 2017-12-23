@@ -5,7 +5,7 @@ import sys
 from collections import defaultdict, Counter
 import numpy as np
 
-MIN_OCCURRENCES = 100
+MIN_OCCURRENCES = 400
 TARGET_WORDS = ["car", "bus", "hospital", "hotel", "gun", "bomb", "horse", "fox", "table", "bowl", "guitar", "piano"]
 
 def read_file(file_name):
@@ -139,7 +139,7 @@ if __name__ == "__main__":
 
     key2word = np.array([w for w in sorted(frequent_lemmas)])
     word2key = {w: i for i, w in enumerate(sorted(frequent_lemmas))}
-    strategies = [CoContextWord(), WindowContextWord()]
+    strategies = [DependecyContextWord(), CoContextWord(), WindowContextWord()]
     for strategy in strategies:
         dict = create_dictionary(sentences, strategy, frequent_lemmas)
         print "bulding matrix..."

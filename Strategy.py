@@ -71,9 +71,20 @@ class DependecyContextWord(object):
             dependency_label = words[i][7]
             if dependency_id != -1:
                 if lemma_words[dependency_id] not in FUNCTION_WORDS and lemma_words[i] not in FUNCTION_WORDS:
-                    context[i].append(lemma_words[dependency_id] + " -> " + dependency_label)
-                    context[dependency_id].append(lemma_words[i] + " <- " + dependency_label)
+                    context[i].append(lemma_words[dependency_id] + " U " + dependency_label)
+                    context[dependency_id].append(lemma_words[i] + " D " + dependency_label)
+
+                elif lemma_words[dependency_id] in FUNCTION_WORDS:
+                    det_dependency_id = int(words[dependency_id][6]) - 1
+                    det_depndency_label = words[det_dependency_id][7]
+                    if det_dependency_id != -1:
+                        det_dependency_conencted_word = words[det_dependency_id][2]
+                        context[i].append(det_dependency_conencted_word + " U " + lemma_words[dependency_id])
+                        context[det_dependency_id].append(det_dependency_conencted_word + " D " + lemma_words[i])
+
+
         context = [x for x in context if x != []]
+
         return filtered_lemma_words, context
 
 
@@ -142,12 +153,15 @@ def DependencyContextWordSimpleTest():
                 "3\tate\teat\tVB\tVB\t_\t2\tpartmod\t_\t_\r\n",
                 "4\tmy\tmy\tIN\tIN\t_\t5\tposs\t_\t_\r\n", "5\thomework\thomework\tNN\tNN\t_\t0\t_\t_\t_\r\n"]
     words, context = wcw.get_context(sentence)
+    print words
+    print "==================="
+    print context
 
     assert len(context) == 2
     assert len(words) == 3
-    assert context[0] == ["eat <- partmod"] and words[0] == 'dog'
+    assert context[0] == ["eat D partmod"] and words[0] == 'dog'
     print "Passed zero index test"
-    assert context[1] == ['dog -> partmod'] and words[1] == 'eat'
+    assert context[1] == ['dog U partmod'] and words[1] == 'eat'
     print "Passed first index test"
     assert words[2] == 'homework'
 
@@ -155,6 +169,6 @@ def DependencyContextWordSimpleTest():
 
 
 if __name__ == "__main__":
-    WindowContextWordSimpleTest()
-    CoContextStrategySimpleTest()
+    #WindowContextWordSimpleTest()
+    #CoContextStrategySimpleTest()
     DependencyContextWordSimpleTest()
