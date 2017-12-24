@@ -154,7 +154,10 @@ def word_similaraties(key2word, word_attribute_mat, attribute_word_mat, word_ind
         v_side = 0.0
         for att in v_attributes:
             v_side += v_attributes[att] * v_attributes[att]
-        similarity_mat[i] /= np.sqrt(u_side * v_side)
+        if u_side <= 0.000000001 or v_side <= 0.000000001:
+            similarity_mat[i] = 0.0
+        else:
+            similarity_mat[i] /= np.sqrt(u_side * v_side)
     return similarity_mat
 
 
