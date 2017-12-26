@@ -1,12 +1,11 @@
 import gc
-
 from Strategy import *
 import sys
 from collections import defaultdict, Counter
 import numpy as np
 
 MIN_OCCURRENCES = 100
-CONTEXT_MIN_OCCURRENCES = 200
+CONTEXT_MIN_OCCURRENCES = 300
 
 TARGET_WORDS = ["car", "bus", "hospital", "hotel", "gun", "bomb", "horse", "fox", "table", "bowl", "guitar", "piano"]
 
@@ -76,14 +75,12 @@ def create_dictionary(sentences, strategy, frequent_lemmas):
             if w not in frequent_lemmas: continue  # filter rare words.
 
             context_counts_for_word = word_counts[w]
-
             for context_word in c:
 
                 #if context_word not in frequent_lemmas: continue
 
                 context_counts_for_word[context_word] += 1
                 context_counts[context_word]+=1
-
     print "Voc size: ", len(word_counts)
     return word_counts, context_counts
 
@@ -172,23 +169,22 @@ if __name__ == "__main__":
     key2word = np.array([w for w in sorted(frequent_lemmas)])
     word2key = {w: i for i, w in enumerate(sorted(frequent_lemmas))}
     #DependecyContextWord()
-    strategies = [DependecyContextWord(), CoContextWord(), WindowContextWord()]
+    strategies = [CoContextWord(), WindowContextWord(), DependecyContextWord()]
     for strategy in strategies:
         dict, context_dict = create_dictionary(sentences, strategy, frequent_lemmas)
         clean_dictionary(dict, context_dict, isinstance(strategy, DependecyContextWord))
         print "bulding matrix..."
         m = get_matrix(dict, context_dict, frequent_lemmas, word2key)
+        del dict, context_dict
+        gc.collect()
         mt = get_attributes_words_matrix(m)
         for word in TARGET_WORDS:
             similar_words = np.array(word_similaraties(key2word, m, mt, word2key[word]))
-            most_similar = similar_words.argsort()[-1:-k:-1]
+            most_similar = similar_words.argsort()[-2:-k - 2:-1]
             print key2word[most_similar]
             print "======"
         print "==================================="
-        del dict
-        del m
-        del mt
-        del similar_words, most_similar
+        del m, mt, similar_words, most_similar
         gc.collect()
 
 
