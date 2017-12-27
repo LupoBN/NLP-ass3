@@ -5,7 +5,7 @@ from collections import defaultdict, Counter
 import numpy as np
 
 MIN_OCCURRENCES = 100
-CONTEXT_MIN_OCCURRENCES = 300
+CONTEXT_MIN_OCCURRENCES = 500
 
 TARGET_WORDS = ["car", "bus", "hospital", "hotel", "gun", "bomb", "horse", "fox", "table", "bowl", "guitar", "piano"]
 
@@ -161,7 +161,6 @@ def word_similaraties(key2word, word_attribute_mat, attribute_word_mat, word_ind
 if __name__ == "__main__":
     sentences = read_file("wikipedia.sample.trees.lemmatized")
     lemma_count = get_word_count(sentences)
-    print "test: ", lemma_count["confederate_states_of_america"]
     frequent_lemmas = set(filter(lambda lemma: lemma_count[lemma] > MIN_OCCURRENCES and lemma not in FUNCTION_WORDS,
                                  lemma_count.iterkeys()))
     k = 20
@@ -169,20 +168,24 @@ if __name__ == "__main__":
     key2word = np.array([w for w in sorted(frequent_lemmas)])
     word2key = {w: i for i, w in enumerate(sorted(frequent_lemmas))}
     #DependecyContextWord()
-    strategies = [CoContextWord(), WindowContextWord(), DependecyContextWord()]
+    strategies = [DependecyContextWord(), CoContextWord(), WindowContextWord()]
     for strategy in strategies:
         dict, context_dict = create_dictionary(sentences, strategy, frequent_lemmas)
         clean_dictionary(dict, context_dict, isinstance(strategy, DependecyContextWord))
         print "bulding matrix..."
         m = get_matrix(dict, context_dict, frequent_lemmas, word2key)
-        del dict, context_dict
+        del context_dict
         gc.collect()
         mt = get_attributes_words_matrix(m)
         for word in TARGET_WORDS:
+            print "======" + word + "======"
+            print "======First Order======"
+            print dict[word].most_common(k)
+            print "======Second Order======"
             similar_words = np.array(word_similaraties(key2word, m, mt, word2key[word]))
             most_similar = similar_words.argsort()[-2:-k - 2:-1]
             print key2word[most_similar]
-            print "======"
+
         print "==================================="
         del m, mt, similar_words, most_similar
         gc.collect()
