@@ -187,7 +187,7 @@ if __name__ == "__main__":
             print key2word[most_similar]
 
         print "==================================="
-        del m, mt, similar_words, most_similar
+        del dict, m, mt, similar_words, most_similar
         gc.collect()
 
 
