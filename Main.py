@@ -10,8 +10,8 @@ CONTEXT_MIN_OCCURRENCES = 500
 TARGET_WORDS = ["car", "bus", "hospital", "hotel", "gun", "bomb", "horse", "fox", "table", "bowl", "guitar", "piano"]
 
 
-def clean_dictionary(words_dict, context_dict, syntactic_window = False):
-    before = 1.*sum([sum(words_dict[c].itervalues()) for c in words_dict])
+def clean_dictionary(words_dict, context_dict, syntactic_window=False):
+    before = 1. * sum([sum(words_dict[c].itervalues()) for c in words_dict])
     print "len before: ", before
     for w, context in words_dict.iteritems():
         cpy = Counter(words_dict[w])
@@ -19,7 +19,7 @@ def clean_dictionary(words_dict, context_dict, syntactic_window = False):
             if context_dict[c] < CONTEXT_MIN_OCCURRENCES:
                 del cpy[c]
 
-            elif syntactic_window: #if it's a syntactic dependency
+            elif syntactic_window:  # if it's a syntactic dependency
 
                 word = c.split("*-")[0].strip()
 
@@ -30,9 +30,10 @@ def clean_dictionary(words_dict, context_dict, syntactic_window = False):
 
     after = 1. * sum([sum(words_dict[c].itervalues()) for c in words_dict])
     print "len after: ", after
-    print "fraction: ", after/before
+    print "fraction: ", after / before
 
     return words_dict
+
 
 def read_file(file_name):
     with open(file_name, "r") as f:
@@ -76,11 +77,10 @@ def create_dictionary(sentences, strategy, frequent_lemmas):
 
             context_counts_for_word = word_counts[w]
             for context_word in c:
-
-                #if context_word not in frequent_lemmas: continue
+                # if context_word not in frequent_lemmas: continue
 
                 context_counts_for_word[context_word] += 1
-                context_counts[context_word]+=1
+                context_counts[context_word] += 1
     print "Voc size: ", len(word_counts)
     return word_counts, context_counts
 
@@ -102,7 +102,7 @@ def get_vector(w, counts, context_counts, frequent_lemmas, word2key, total_num_p
     v = {}
     for i, w2 in enumerate(counts[w].iterkeys()):
 
-        #if w2 not in frequent_lemmas: continue
+        # if w2 not in frequent_lemmas: continue
 
         PMI = calculate_PMI(w, w2, counts, context_counts, total_num_pairs)
         if PMI > 1e-7:
@@ -111,7 +111,7 @@ def get_vector(w, counts, context_counts, frequent_lemmas, word2key, total_num_p
     return v
 
 
-def get_matrix(counts,context_counts, frequent_lemmas, word2key):
+def get_matrix(counts, context_counts, frequent_lemmas, word2key):
     l = len(frequent_lemmas)
     m = [None] * l
     total_num_pairs = 1. * sum([sum(counts[c].itervalues()) for c in counts])
@@ -119,7 +119,7 @@ def get_matrix(counts,context_counts, frequent_lemmas, word2key):
     for i, w in enumerate(frequent_lemmas):
         if i % 100 == 0:
             print "{}/{}".format(i, l)
-        m[word2key[w]] = get_vector(w, counts,context_counts, frequent_lemmas, word2key, total_num_pairs)
+        m[word2key[w]] = get_vector(w, counts, context_counts, frequent_lemmas, word2key, total_num_pairs)
 
     return m
 
@@ -167,7 +167,7 @@ if __name__ == "__main__":
 
     key2word = np.array([w for w in sorted(frequent_lemmas)])
     word2key = {w: i for i, w in enumerate(sorted(frequent_lemmas))}
-    #DependecyContextWord()
+    # DependecyContextWord()
     strategies = [DependecyContextWord(), CoContextWord(), WindowContextWord()]
     for strategy in strategies:
         dict, context_dict = create_dictionary(sentences, strategy, frequent_lemmas)
@@ -180,7 +180,9 @@ if __name__ == "__main__":
         for word in TARGET_WORDS:
             print "======" + word + "======"
             print "======First Order======"
-            print dict[word].most_common(k)
+            first_order = dict[word].most_common(k)
+            first_order = np.array([context[0] for context in first_order])
+            print first_order
             print "======Second Order======"
             similar_words = np.array(word_similaraties(key2word, m, mt, word2key[word]))
             most_similar = similar_words.argsort()[-2:-k - 2:-1]
@@ -189,7 +191,6 @@ if __name__ == "__main__":
         print "==================================="
         del dict, m, mt, similar_words, most_similar
         gc.collect()
-
 
     """
     k = 5
