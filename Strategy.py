@@ -1,10 +1,11 @@
-FUNCTION_WORDS = set(["the", ",", ".", "a", "an", "and", "or", "be", "who", "he", "she", "it", "is", "are", "of",
-                      "in", "to", "'s", "with", "''", '``', "have", "has", "this", "that", "for",
-                      "by", "his", "from", "their", "not", "it", "at", "her", "which", "on", "(", ")",
-                      "without", "between", "anybody", "they", "my", "more", "much", "either", "neither",
-                      "when", "while", "although", "am", "got", "do", "as",
-                      "but", ";", "-", "this", "one", "also", "after", "therefore",
-                      "could", "can"])
+from collections import defaultdict, Counter
+
+
+FUNCTION_WORDS = {"the", ",", ".", "a", "an", "and", "or", "be", "who", "he", "she", "it", "is", "are", "of", "in",
+                  "to", "'s", "with", "''", '``', "have", "has", "this", "that", "for", "by","him", "her", "his", "from", "off",
+                  "where", "their", "not", "both", "them", "it", "at", "her", "which", "on", "(", ")", "without", "only", "via",
+                  "between", "anybody", "they", "my", "more", "much", "either", "neither", "when", "while", "although",
+                  "am", "got", "do", "as", "but", ";", "-", "this", "one", "also", "after", "therefore", "could", "can"}
 
 
 class ContextStrategy(object):
@@ -66,26 +67,35 @@ class DependecyContextWord(object):
             lemma_words.append(parsed_word[2])
 
         filtered_lemma_words = filter(lambda word: word not in FUNCTION_WORDS, lemma_words)
+        words_context_dict = defaultdict(list)
+
         for i in range(0, num_of_words):
+
             dependency_id = int(words[i][6]) - 1
             dependency_label = words[i][7]
             if dependency_id != -1:
-                if lemma_words[dependency_id] not in FUNCTION_WORDS and lemma_words[i] not in FUNCTION_WORDS:
+                if lemma_words[dependency_id] not in FUNCTION_WORDS and lemma_words[i] not in FUNCTION_WORDS and "_" not in lemma_words[i]:
                     context[i].append(lemma_words[dependency_id] + " *-U-* " + dependency_label)
                     context[dependency_id].append(lemma_words[i] + " *-D-* " + dependency_label)
+                    words_context_dict[lemma_words[i]].append(lemma_words[dependency_id] + " *-U-* " + dependency_label)
+                    words_context_dict[words[dependency_id][2]].append(lemma_words[i] + " *-D-* " + dependency_label)
 
-                # elif lemma_words[dependency_id] in FUNCTION_WORDS:
-                #     det_dependency_id = int(words[dependency_id][6]) - 1
-                #     det_depndency_label = words[det_dependency_id][7]
-                #     if det_dependency_id != -1:
-                #         det_dependency_conencted_word = words[det_dependency_id][2]
-                #         context[i].append(det_dependency_conencted_word + " U " + lemma_words[dependency_id])
-                #         context[det_dependency_id].append(det_dependency_conencted_word + " D " + lemma_words[i])
+                elif lemma_words[dependency_id] in FUNCTION_WORDS:
+                    det_dependency_id = int(words[dependency_id][6]) - 1
+                    det_depndency_label = words[det_dependency_id][7]
+                    if det_dependency_id != -1:
+                        det_dependency_conencted_word = words[det_dependency_id][2]
+                        context[i].append(det_dependency_conencted_word + " U " + lemma_words[dependency_id])
+                   	words_context_dict[lemma_words[i]].append(det_dependency_conencted_word + " U " + lemma_words[dependency_id])
+
+                        context[det_dependency_id].append(det_dependency_conencted_word + " D " + lemma_words[i])
+                   	words_context_dict[lemma_words[det_dependency_id]].append(det_dependency_conencted_word + " D " + lemma_words[i])
 
 
-        context = [x for x in context if x != []]
+        words, contexts = words_context_dict.keys(), words_context_dict.values()
 
-        return filtered_lemma_words, context
+        #return filtered_lemma_words, context
+        return words, contexts
 
 
 class CoContextWord(object):
